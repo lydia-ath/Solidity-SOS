@@ -1,0 +1,134 @@
+<html>
+	<head>
+		<meta charset="UTF-8">
+		<title>SOS</title>
+	</head>	
+	<style>
+
+  .btn {
+            background-color: yellow;
+            color: black;
+            width: 170px;
+			height:30px;
+           justify-content: left; 
+			vertical-align: middle;
+            font-size: 12px;
+            border-radius: 10px;
+            border: 3px dashed blue;
+         }
+		 
+	.btn:hover {
+	    background-color: red;
+	}
+	
+	.inp{
+	  width:250px;
+	  height:25px;
+	  
+	}
+	
+	.inp1{
+	  width:100px;
+	  height:25px;
+	   
+	}
+	
+	.response {
+	  width:500px;
+	  height:25px;
+	}
+	
+	</style>
+	<body>
+		Enter connection info and click "Update" to set your settings.<br>
+		<table>
+				<tr><td><input type="text" id="contract"  placeholder="Contract Address"></input></td></tr>
+				<tr><td><input type="text" id="account" placeholder="Account  Address"></input></td></tr>
+				<tr><td><input type="text" id="nodeIP" placeholder="Full Node IP"></input></td></tr>
+				<tr><td><input type="text" id="nodePort" placeholder="Full Node Port"></input></td><tr>
+				<tr><td><input type="text" id="update-return" placeholder="Response" class="response" disabled></input></td></tr>		
+			    <tr>
+				<td><button id="update" class="btn">Update</button></td>
+				</tr>
+		</table>
+		<table>
+			<tr>
+				<br>
+			</tr>
+			<tr>
+				<td></td>
+				<td>Game ID </td>
+				<td>Argument </td>
+				<td style><font color="red">Response</font></td>
+			<tr>
+				<td><button id="join" class="btn">Join</button></td>
+				<td></td>
+				<td></td>
+				<td><input type="text" id="join-return" class="response" disabled></input></td>
+			</tr>
+			<tr>
+				<td><button id="cancel" class="btn">Cancel</button></td>
+				<td><input type="text" id="cancel-id" class="inp"></input></td>
+				<td></td>
+				<td><input type="text" id="cancel-return" class="response" disabled></input></td>
+			</tr>
+			<tr>
+				<td><button id="getGameState" class="btn">Game State</button></td>
+				<td><input type="text" id="getGameState-id" class="inp"></input></td>
+				<td></td>
+				<td><input type="text" id="getGameState-return" class="response" disabled></input></td>
+			</tr>
+			<tr>
+				<td><button id="placeS" class="btn">Place 'S'</button></td>
+				<td><input type="text" id="placeS-id" class="inp"></input></td>
+				<td><input type="number" id="placeS-arg" min="1" max="9" placeholder="Position" class="inp1"></input></td>
+				<td><input type="text" id="placeS-return" class="response" disabled></input></td>
+			</tr>
+			<tr>
+				<td><button id="placeO" class="btn">Place 'O'</button></td>
+				<td><input type="text" id="placeO-id" class="inp"></input></td>
+				<td><input type="number" id="placeO-arg" min="1" max="9" placeholder="Position" class="inp1"></input></td>
+				<td><input type="text" id="placeO-return" class="response" disabled></input></td>
+			</tr>
+			<tr>
+				<td><button id="ur2slow" class="btn">Too Slow</button></td>
+				<td><input type="text" id="ur2slow-id" class="inp"></input></td>
+				<td></td>
+				<td><input type="text" id="ur2slow-return" class="response" disabled></input></td>
+			</tr>
+			<tr>
+				<td><button id="collectProfit" class="btn">Collect Profit</button></td>
+				<td></td>
+				<td></td>
+				<td><input type="text" id="collectProfit-return" class="response" disabled></input></td>
+			</tr>
+		</table>
+		<table>
+			<tr>
+				<br>
+			</tr>
+			<tr>
+				<td>Current Gas Limit:.......</td>
+				<td><input type="text" id="gasLimit" style="width:300%"></input></td>
+			</tr>
+			<tr>
+				<td>Current Gas Price:....... </td>
+				<td><input type="text" id="gasPrice" style="width:300%"></input></td>
+			</tr>
+		</table>
+		<table>
+			<tr>
+				<br>
+			</tr>
+			<tr>
+				<td>Latest NewGame event:</td>
+				<td><input type="text" id="newGame" class="response"disabled></input></td>
+			</tr>
+			<tr>
+				<td>Latest MoveEvent event:</td>
+				<td><input type="text" id="moveEvent" class="response" disabled></input></td>	
+			</tr>
+		</table>
+
+	</body>
+</html> 

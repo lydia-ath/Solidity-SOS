@@ -1,0 +1,252 @@
+//Δρούγκα Σοφία f3312105
+//Αθανασίου Λυδία f3312102
+
+pragma solidity >=0.7.0;
+
+contract CryptoSOS {
+
+    //players data, define player as data structure
+     struct gamePlayer   
+    {
+        uint256  gamePlayerId;     
+        address  gamePlayerAddess;  
+        bool  gamePlayerIsPresent; 
+    }
+
+    //price 1 ether to join the game
+    uint constant START_PRICE = 1 ether;  
+    uint startprice=1 ether;
+
+    // player 1 plays first
+    uint8  current_move = 1;
+    enum BoardSquareState {Empty, S, O}
+    BoardSquareState[3][3] squareBoard;
+    
+ // Player 1
+gamePlayer  private p1;
+ // Player 2    
+gamePlayer  private p2;     
+ // The game owner's address
+address private game_owner;  
+//player's turn
+uint8 private active_player;    
+
+//game is in progress
+bool gameIsActive = false;
+//game has finished
+bool gameIsOver = false;
+bool cancel_request = false;
+bool game_move = false;
+bool ur2slow_request = false;
+bool gameIsRunning;
+uint start_time;
+uint game_duration;
+uint move=1;
+uint time_to_request_cancel;
+uint time_start_of_ur2slow;
+uint latest_move;
+uint8 private constant EMPTY = 0;
+uint8 private reservedFunds;
+
+//requested events
+ event StartGame(address,address);
+ event Move(address,uint8, uint8);
+ event Winner(address);
+
+ constructor()
+    {
+        game_owner = msg.sender;
+        
+        p1.gamePlayerId = 1;  
+        p2.gamePlayerId = 2; 
+        
+        //there are no players yet
+        p1.gamePlayerIsPresent = false;
+        p2.gamePlayerIsPresent = false;
+        // Player 1 starts the game.
+        active_player = 1;   
+              
+    }
+
+function play() public payable {
+
+    //1 Ether required  to play
+     require (msg.value ==  START_PRICE);
+     require (!p1.gamePlayerIsPresent || !p2.gamePlayerIsPresent, "no one has in place yet");
+
+     if (!p1.gamePlayerIsPresent) 
+            {
+            p1.gamePlayerAddess = msg.sender;
+            p1.gamePlayerIsPresent = true;
+            start_time = block.timestamp;
+            emit  StartGame(p1.gamePlayerAddess, address(0x0));
+     } else if (!p2.gamePlayerIsPresent) 
+            {
+            require(p1.gamePlayerAddess != msg.sender, "p1 is allreay  player ");
+            p2.gamePlayerAddess = msg.sender;
+            p1.gamePlayerIsPresent = true;
+            gameIsActive  = true;
+            emit  StartGame( p1.gamePlayerAddess,  p2.gamePlayerAddess);
+        }else 
+            {revert("This game is allready occupied by other players");}
+
+             reservedFunds++;  //  1 Ether reserved .
+}
+
+ function placeO(uint8 position) public{
+
+     uint8 xpos;
+     uint8 ypos;
+     require(p1.gamePlayerIsPresent && p2.gamePlayerIsPresent, "The game must be active.");
+     require(!gameIsOver, "Game has finished!");
+     require (msg.sender == p1.gamePlayerAddess || msg.sender == p2.gamePlayerAddess ); 
+     require(position>=1 && position<=9);
+     xpos = (position-1)/3;
+     ypos = (position-1)%3;
+     require(squareBoard[xpos][ypos]== BoardSquareState.Empty, "square");
+     squareBoard[xpos][ypos] =  BoardSquareState.O;
+     game_move = true;
+     emit Move(msg.sender, position, 2);
+     move = move+1;
+
+      if (isWinner())  {
+           gameIsOver = true;
+           //msg.sender.transfer(address(this).balance-0.2 ether);
+           (bool success, ) = msg.sender.call{value: 1.9 ether}("");
+            emit Winner(msg.sender);
+        } else if(move>9){
+            gameIsOver = true;
+            emit Winner(address(0x0));
+        }
+ }
+
+ function placeS(uint8 position) public{
+
+     uint8 xpos;
+     uint8 ypos;
+     require(p1.gamePlayerIsPresent && p2.gamePlayerIsPresent, "The game must be active.");
+     require(!gameIsOver, "Game has finished!");
+     require (msg.sender == p1.gamePlayerAddess || msg.sender == p2.gamePlayerAddess ); 
+     require(position>=1 && position<=9);
+     xpos = (position-1)/3;
+     ypos = (position-1)%3;
+     require(squareBoard[xpos][ypos]== BoardSquareState.Empty, "square is allready occupied");
+     squareBoard[xpos][ypos] =  BoardSquareState.S;
+     game_move = true;
+     emit Move(msg.sender, position, 2);
+     move = move+1;
+     
+      if (isWinner())  {
+           gameIsOver = true;
+           (bool success, ) = msg.sender.call{value: 1.9 ether}("");
+        }else if(move>9){
+            gameIsOver = true;
+            emit Winner(address(0x0));
+        }
+ }
+
+ function   collectProfit() public payable   {
+         require(msg.sender ==  game_owner, "You are not the owner of the contract");
+         require(gameIsOver, "Game has not ended.");
+        // msg.sender.transfer(address(this).balance);
+         (bool success, ) = msg.sender.call{value: address(this).balance - reservedFunds*10**18}(""); //- reserve*10**18
+     }
+
+  function cancel() public payable {
+        time_to_request_cancel = block.timestamp;
+        require(!gameIsOver, "Game has alreadey completed.");
+        require(p2. gamePlayerAddess == address(0x0), "Game has already started");
+        require(time_to_request_cancel - start_time> 120 seconds, "Not time yet to request cancel");
+        require(address(this).balance > reservedFunds*10**18, "Not enough funds.");
+        gameIsOver = true;
+        //msg.sender.transfer(address(this).balance);
+       (bool success, ) = msg.sender.call{value: 1.8 ether}("");
+
+    }
+
+    function ur2slow()  public payable{
+       time_start_of_ur2slow = block.timestamp;
+        require(!gameIsOver, "Game has ended.");
+        require(gameIsActive, "game is not active");
+      //  require(msg.sender == opponentPlayer(getCurrentPlayer(move)), "it's your turn to play");
+        require(game_move,"There is no player yet");
+        require(time_start_of_ur2slow - latest_move > 60 seconds,  "Not yet time to request slow");
+        gameIsOver = true;
+       // msg.sender.transfer(address(this).balance-0.1 ether);
+        (bool success, ) = msg.sender.call{value: 1.8 ether}("");
+        //(bool success, ) = msg.sender.call.ballance;
+        emit Move(msg.sender,1,1);
+    }
+
+    function opponentPlayer(address current_player) internal view returns (address) {
+        require(gameIsActive, "Wait for player 2");
+        if (current_player == p1.gamePlayerAddess) {
+            return p2.gamePlayerAddess;
+        } else if (current_player == p2.gamePlayerAddess) {
+            return p1.gamePlayerAddess;
+        } else {
+            revert("Invalid player.");
+        }
+    }
+
+    // returns the current player
+    function getCurrentPlayer(uint8 _current_move) internal view returns (address) {
+       
+        if (_current_move % 2 == 0) {
+            return p2.gamePlayerAddess;
+        }
+        else {
+            return p1.gamePlayerAddess;
+            }
+        }
+
+ function isWinner() internal view returns (bool) {
+       if (squareBoard[0][0]  == BoardSquareState.S){
+           if (((squareBoard[0][1]  ==BoardSquareState.O ) && (squareBoard[0][2]  == BoardSquareState.S )) || ((squareBoard[1][0]  == BoardSquareState.O ) && (squareBoard[2][0]  == BoardSquareState.S ))){
+               return true;
+           }
+        }
+       if (squareBoard[2][2]  ==  BoardSquareState.S){
+           if (((squareBoard[1][2]  == BoardSquareState.O ) && (squareBoard[0][2]  == BoardSquareState.S ) ) || ((squareBoard[2][1]  == BoardSquareState.O ) && (squareBoard[2][0]  == BoardSquareState.S )) ){
+               return true;
+           }
+        }
+
+       if  (squareBoard[1][1]  ==  BoardSquareState.O){
+           //Checks the diagonals
+            // if  board[1][[1]] == SquareState.S  no possible winner diagonally
+           if (((squareBoard[0][0] ==  BoardSquareState.S) && (squareBoard[2][2] ==  BoardSquareState.S )) || ((squareBoard[0][2] ==  BoardSquareState.S) && (squareBoard[2][0] == BoardSquareState.S ))) {
+               return true;
+           }
+           // checks the 2nd row and the second column of the board
+           if (((squareBoard[1][0]  == BoardSquareState.S)  && (squareBoard[1][2]  == BoardSquareState.S)) || ((squareBoard[0][1]  == BoardSquareState.S)  && (squareBoard[2][1]  == BoardSquareState.S))) {
+               return true;
+           }
+       }
+ }
+
+       function positionToString(uint8 xpos, uint8 ypos)  internal returns (string memory) {
+         
+        if (squareBoard[xpos][ypos] == BoardSquareState.Empty) {
+            return ("-");
+        }
+        if (squareBoard[xpos][ypos] == BoardSquareState.S) {
+            return ("S");
+        }
+        if (squareBoard[xpos][ypos] ==BoardSquareState.O) {
+            return ("O");
+        }
+    }
+
+     function getGameState()  public    returns (string memory) {
+
+         return (string(abi.encodePacked(positionToString(0,0), " | ", positionToString(0,1), " | ",positionToString(0,2), " | ",
+        positionToString(1,0), "|" , positionToString(1,1),"|", positionToString(1,2),"|", positionToString(2,0),"|",
+        positionToString(2,1),"|",positionToString(2,2) )));   
+
+     }
+ 
+    }
+
+
+
